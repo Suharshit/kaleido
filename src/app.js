@@ -33,4 +33,5 @@ import userRouter from './routes/user.routes.js'
 
 // routes usage
 app.use('/api/v1/users', userRouter)
+
 export { app }
