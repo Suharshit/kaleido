@@ -204,7 +204,7 @@ const userLogout = asyncHandler( async(req, res) => {
 })
 
 const refreshAccessToken = asyncHandler( async(req, res) => {
-    const incomingRefreshToken = req.cookies || req.body.refreshToken;
+    const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
     if(!incomingRefreshToken){
         throw new apiError({
             status: 401,
