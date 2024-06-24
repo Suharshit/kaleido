@@ -122,7 +122,7 @@ const userLogin = asyncHandler( async(req, res) => {
     const { email, username, password } = req.body
 
     // check for username and email for which login is going to work
-    if(!email || !username){
+    if(!email && !username){
         throw new apiError({
             status: 400,
             message: "Please provide email or username"
