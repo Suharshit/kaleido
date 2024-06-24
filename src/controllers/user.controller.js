@@ -156,7 +156,7 @@ const userLogin = asyncHandler( async(req, res) => {
     const loggedInUser = await User.findById(user._id).select("-password -refreshtoken")
 
     // send cookie and response
-    options = {
+    const options = {
         httpOnly: true,
         secure: true
     }
@@ -186,7 +186,7 @@ const userLogout = asyncHandler( async(req, res) => {
             new: true,
         }
     )
-    options = {
+    const options = {
         httpOnly: true,
         secure: true
     }
