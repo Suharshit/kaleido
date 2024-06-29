@@ -1,6 +1,12 @@
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middleware.js";
-import { publishVideo, getAllVideos, getVideoById, updateVideoInformation, deleteVideo } from "../controllers/video.controller.js";
+import { 
+    publishVideo, 
+    getAllVideos, 
+    getVideoById, 
+    updateVideoInformation, 
+    deleteVideo 
+} from "../controllers/video.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router()
