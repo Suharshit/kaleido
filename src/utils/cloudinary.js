@@ -31,7 +31,9 @@ const deleteFromCloudInary = async(url) => {
         const indexone = url.lastIndexOf('/')
         const indextwo = url.lastIndexOf('.')
         const publicId = url.slice(indexone+1, indextwo)
-        await cloudinary.uploader.destroy(publicId);
+        await cloudinary.uploader.destroy(publicId, {
+            resource_type: "auto"
+        });
         return new apiResponse({
             status: 200,
             message: "file is deleted from cloundinary",
