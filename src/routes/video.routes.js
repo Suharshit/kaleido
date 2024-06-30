@@ -5,7 +5,8 @@ import {
     getAllVideos, 
     getVideoById, 
     updateVideoInformation, 
-    deleteVideo 
+    deleteVideo,
+    togglePublishStatus
 } from "../controllers/video.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
@@ -43,4 +44,8 @@ router.route('/deletevideo/:videoId').get(
     deleteVideo
 )
 
+router.route('/publishstatus/:videoId').get(
+    verifyJWT,
+    togglePublishStatus
+)
 export default router

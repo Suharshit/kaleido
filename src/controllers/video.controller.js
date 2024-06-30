@@ -2,7 +2,7 @@ import mongoose, { isValidObjectId } from "mongoose";
 import { apiError } from '../utils/apiError.js'
 import { apiResponse } from '../utils/apiResponse.js'
 import { asyncHandler } from '../utils/asyncHandler.js'
-import { uploadOnCloudInary } from "../utils/cloudinary.js";
+import { uploadOnCloudInary, deleteFromCloudInary } from "../utils/cloudinary.js";
 import { Video } from '../modals/video.modal.js'
 
 const publishVideo = asyncHandler(async(req, res) => {
@@ -65,13 +65,37 @@ const publishVideo = asyncHandler(async(req, res) => {
 
 // getAllvideos
 const getAllVideos = asyncHandler(async(req, res) => {
-    const videos = await Video.find({}).populate("owner", "username email")
+    const { page = 1, limit = 10, query = ' '} = req.query
+    const videos = await Video.aggregate([
+        {
+            $match: {
+                $or: [
+                    {title: {$regex: query, $options: 'i'}},
+                ]
+            }
+        },
+        {
+            $limit: limit
+        },
+        {
+            $sort: {
+                views: 1
+            }
+        }
+    ]).skip((page - 1) * limit)
     if(!videos){
         throw new apiError({
             status: 500,
             message: "Error while fetching videos"
         })
     }
+    if(videos.length === 0){
+        throw new apiError({
+            status: 404,
+            message: "No videos found"
+        })
+    }
+    
     return res.status(200)
     .json(
         new apiResponse({
@@ -159,6 +183,17 @@ const deleteVideo = asyncHandler(async(req, res) => {
             message: "Video id is required"
         })
     }
+    const video = await Video.findById(videoId)
+    console.log(video);
+    const deletevideo = await deleteFromCloudInary(video.videoFile)
+    const deletethumbnail = await deleteFromCloudInary(video.thumbnail)
+
+    if(!(deletevideo && deletethumbnail)){
+        throw new apiError({
+            status: 500,
+            message: "Error while deleting video"
+        })
+    }
 
     await Video.findByIdAndDelete(videoId)
 
@@ -171,12 +206,42 @@ const deleteVideo = asyncHandler(async(req, res) => {
         })
     )
 })
+
 // togglePublishStatus
+const togglePublishStatus = asyncHandler(async(req, res) => {
+    const { videoId } = req.params
+    if(!videoId){
+        throw new apiError({
+            status: 400,
+            message: "Video id is required"
+        })
+    }
+    const video = await Video.findById(videoId)
+    if(!video){
+        throw new apiError({
+            status: 404,
+            message: "Video not found"
+        })
+    }
+    video.isPublished = !video.isPublished
+    await video.save({
+        validateBeforeSave: false
+    })
+    return res.status(200)
+    .json(
+        new apiResponse({
+            status: 200,
+            message: "Video published status updated successfully",
+            data: video
+        })
+    )
+})
 
 export {
     publishVideo,
     getAllVideos,
     getVideoById,
     updateVideoInformation,
-    deleteVideo
+    deleteVideo,
+    togglePublishStatus
 }

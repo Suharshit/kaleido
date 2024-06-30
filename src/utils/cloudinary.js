@@ -26,9 +26,12 @@ const uploadOnCloudInary = async(localFilePath) => {
     }
 }
 
-const deleteFromCloudInary = async(public_id) => {
+const deleteFromCloudInary = async(url) => {
     try {
-        await cloudinary.uploader.destroy(public_id);
+        const indexone = url.lastIndexOf('/')
+        const indextwo = url.lastIndexOf('.')
+        const publicId = url.slice(indexone+1, indextwo)
+        await cloudinary.uploader.destroy(publicId);
         return new apiResponse({
             status: 200,
             message: "file is deleted from cloundinary",
