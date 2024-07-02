@@ -16,12 +16,12 @@ router.route('/create-playlist').post(
     createPlaylist
 )
 
-router.route("/delete-playlist").get(
+router.route("/delete-playlist/:playlistId").get(
     verifyJWT,
     deletePlaylist
 )
 
-router.route("/get-user-playlist/:userId").get(
+router.route("/get-user-playlist").get(
     verifyJWT,
     getUserPlaylists
 )
@@ -31,12 +31,12 @@ router.route("/get-playlist/:playlistId").get(
     getPlaylistById
 )
 
-router.route('/add-video-playlist/:playlistId/:videoId').get(
+router.route('/add-video/:playlistId/:videoId').get(
     verifyJWT,
     addVideoToPlaylist
 )
 
-router.route('/remove-video-playlist/:playlistId/:videoId').get(
+router.route('/remove-video/:playlistId/:videoId').get(
     verifyJWT,
     removeVideoFromPlaylist
 )

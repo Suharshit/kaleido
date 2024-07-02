@@ -1,4 +1,4 @@
-import { asyncHandler } from "../utils/asyncHandler";
+import { asyncHandler } from "../utils/asyncHandler.js";
 import { Playlist } from "../modals/playlist.modal.js";
 import { apiError } from "../utils/apiError.js";
 import { apiResponse } from "../utils/apiResponse.js";
@@ -25,9 +25,12 @@ const createPlaylist = asyncHandler(async(req, res) => {
 
 // getUserPlaylists
 const getUserPlaylists = asyncHandler(async(req, res) => {
-    const { userId } = req.params;
+    const userId = req.user?._id;
     const playlists = await Playlist.find({
         owner: userId 
+    }).populate({
+        path: "owner",
+        select: "username avatar email fullname"
     });
     return res.status(200)
     .json(
@@ -42,7 +45,10 @@ const getUserPlaylists = asyncHandler(async(req, res) => {
 // getPlaylistById
 const getPlaylistById = asyncHandler(async(req, res) => {
     const { playlistId } = req.params
-    const playlist = await Playlist.findById(playlistId);
+    const playlist = await Playlist.findById(playlistId).populate({
+        path: "owner",
+        select: "username avatar email fullname"
+    });
     return res.status(200)
     .json(
         new apiResponse({
@@ -56,17 +62,42 @@ const getPlaylistById = asyncHandler(async(req, res) => {
 // addVideoToPlaylist
 const addVideoToPlaylist = asyncHandler(async(req, res) => {
     const { playlistId, videoId } = req.params;
-    if(!(playlistId && videoId)){
+    if(!playlistId || !videoId){
         throw new apiError({
             status: 400,
             message: "Invalid request parameters"
+        })
+    }
+    const beforeplaylist = await Playlist.findById(playlistId);
+    const beforevideo = await Video.findById(videoId);
+    if(!beforeplaylist || !beforevideo){
+        throw new apiError({
+            status: 404,
+            message: "Playlist or video not found"
+        })
+    }
+    if(beforeplaylist.owner.toString() !== req.user._id.toString()){
+        throw new apiError({
+            status: 403,
+            message: "You are not authorized to perform this action"
+        })
+    }
+    const videoExists = await Playlist.find({
+        videos: {
+            $in: [videoId]
+        }
+    })
+    if(videoExists.length > 0){
+        throw new apiError({
+            status: 400,
+            message: "Video already exists in playlist"
         })
     }
 
     const playlist = await Playlist.findByIdAndUpdate(
         playlistId,
         {
-            $push: { videos: videoId }
+           $push: { videos: videoId }
         },
         {
             new: true
@@ -92,7 +123,27 @@ const addVideoToPlaylist = asyncHandler(async(req, res) => {
 // removeVideoFromPlaylist
 const removeVideoFromPlaylist = asyncHandler(async(req, res) => {
     const { playlistId, videoId } = req.params;
-    
+    if(!playlistId || !videoId){
+        throw new apiError({
+            status: 400,
+            message: "Please provide playlistId and videoId"
+        })
+    }
+    const beforePlaylist = await Playlist.findById(playlistId)
+    const beforeVideo = await Video.findById(videoId)
+    if(!beforePlaylist || !beforeVideo){
+        throw new apiError({
+            status: 404,
+            message: "Playlist or video not found"
+        })
+    }
+    if(beforePlaylist.owner.toString() !== req.user._id.toString()){
+        throw new apiError({
+            status: 403,
+            message: "You are not authorized to perform this action"
+        })
+    }
+
     const playlist = await Playlist.findByIdAndUpdate(
         playlistId,
         {

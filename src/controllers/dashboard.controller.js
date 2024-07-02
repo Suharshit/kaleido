@@ -1,6 +1,6 @@
-import { asyncHandler } from "../utils/asyncHandler";
-import { apiError } from "../utils/apiError";
-import { apiResponse } from "../utils/apiResponse";
+import { asyncHandler } from "../utils/asyncHandler.js";
+import { apiError } from "../utils/apiError.js";
+import { apiResponse } from "../utils/apiResponse.js";
 import { Video } from "../modals/video.modal.js"
 import { Like } from "../modals/like.modal.js"
 import { Subscription } from "../modals/subscriptions.modal.js"
