@@ -10,48 +10,65 @@ import { Tweet } from '../modals/tweet.modal.js'
 const getChannelStats = asyncHandler(async(req, res) => {
     const { channelId } = req.params;
     // totalVideoVeiws
-    const videoViews = await Video.aggregate([
+    const videoLikes = await Video.aggregate([
         {
             $match: {
                 owner: channelId
             }
         },
         {
-            $group: {
-                _id: "$owner",
-                totalVideoViews: { $sum: "$views" }
+            $lookup: {
+                from: "likes",
+                localField: "_id",
+                foreignField: "video",
+                as: "likes"
+            }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "veiws",
+                foreignField: "username",
+                as: "veiws"
+            }
+        },
+        {
+            $addFields: {
+                totalVideoLikes: {$size: "$likes"},
+                totalVideoVeiws: {$size: "$veiws"}
             }
         },
         {
             $project: {
-                _id: 0,
-                totalVideoViews: 1
+                _id: 1,
+                totalVideoLikes: 1,
+                totalVideoVeiws: 1,
             }
         }
     ])
 
     // totalVideoLikes
-    const videoLikes = await Like.aggregate([
-        {
-            $match: {
-                video: {
-                    $in: [channelId]
-                }
-            }
-        },
-        {
-            $group: {
-                _id: "$video",
-                totalVideoLikes: { $sum: "$likes" }
-            }
-        },
-        {
-            $project: {
-                _id: 0,
-                totalVideoLikes: 1
-            }
-        }
-    ])
+    // const videoLikes = await Like.aggregate([
+    //     {
+    //         $match: {
+    //             video: {
+    //                 $in: [channelId]
+    //             }
+    //         }
+    //     },
+    //     {
+    //         $group: {
+    //             _id: "$video",
+    //             totalVideoLikes: { $sum: "$likes" }
+    //         }
+    //     },
+    //     {
+    //         $project: {
+    //             _id: 0,
+    //             totalVideoLikes: 1
+    //         }
+    //     }
+    // ])
 
     // totalSubscriber
     const subscriber = await Subscription.aggregate([
@@ -116,7 +133,7 @@ const getChannelStats = asyncHandler(async(req, res) => {
         }
     ])
 
-    if(!(videoViews || videoLikes || videos || tweets || subscriber)){
+    if(!( videoLikes || videos || tweets || subscriber)){
         throw new apiError({
             status: 400,
             message: "No data found",
@@ -128,13 +145,7 @@ const getChannelStats = asyncHandler(async(req, res) => {
         new apiResponse({
             status: 200,
             message: "Data fetched successfully",
-            data: {
-                videoViews: videoViews[0].totalVideo,
-                videoLikes: videoLikes[0].totalVideo,
-                videos: videos.length,
-                subscriber: subscriber,
-                tweets: tweets[0].totalTweet
-            }
+            data: videoLikes
         })
     )
 
